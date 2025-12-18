@@ -3,15 +3,19 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Requests\CheckoutRequest;
 
 class CheckoutController extends Controller
 {
     
-    public function checkout(Request $request)
+    public function checkout(CheckoutRequest $request)
     {
+        // ... business logic here
+        
         return response()->json([
-            'success' => false,
+            'success' => true,
+            'data' => $request->validated(),
             'message' => 'Response processed',
-        ], 400);
+        ], 200);
     }
 }
