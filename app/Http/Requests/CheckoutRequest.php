@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Contracts\Validation\Validator;
 
 class CheckoutRequest extends FormRequest
 {
@@ -27,5 +29,16 @@ class CheckoutRequest extends FormRequest
             'tickets.*.ticket_id' => ['required', 'exists:tickets,id'],
             'tickets.*.quantity' => ['required', 'integer', 'min:1'],
         ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        $response = response()->json([
+            'success' => false,
+            'message' => 'Validation failed',
+            'errors' => $validator->errors()
+        ], 422);
+
+        throw (new ValidationException($validator, $response));
     }
 }
