@@ -3,8 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
+use App\Models\Ticket;
 
 class CheckoutRequest extends FormRequest
 {
@@ -41,4 +42,25 @@ class CheckoutRequest extends FormRequest
 
         throw (new ValidationException($validator, $response));
     }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            foreach ($this->input('tickets', []) as $index => $item) {
+                $ticket = Ticket::find($item['ticket_id']);
+
+                if (!$ticket) {
+                    continue;
+                }
+
+                if ($ticket->available_quantity < $item['quantity']) {
+                    $validator->errors()->add(
+                        "tickets.$index.quantity",
+                        "Not enough tickets available."
+                    );
+                }
+            }
+        });
+    }
+
 }
