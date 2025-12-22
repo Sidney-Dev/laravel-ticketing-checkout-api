@@ -1,0 +1,41 @@
+<?php
+
+namespace app\Services;
+
+use App\Models\User;
+use App\Models\Order;
+use App\Models\Ticket;
+
+class CheckoutService
+{
+    public function checkout(array $orderData): Order
+    {
+        $user = User::latest()->first();
+
+        $order = $user->orders()->create([
+            'status' => 'pending',
+            'total' => 0,
+        ]);
+
+        $total = 0;
+
+        foreach ($orderData['tickets'] as $item) {
+            $ticket = Ticket::lockForUpdate()->findOrFail($item['ticket_id']); // race condition
+
+            // update inventory
+            $ticket->decrement('available_quantity', $item['quantity']);
+            $lineTotal = $ticket->price * $item['quantity'];
+
+            $order->items()->create([
+                'ticket_id' => $ticket->id,
+                'quantity' => $item['quantity'],
+                'price' => $ticket->price,
+            ]);
+
+            $total += $lineTotal;
+        }
+        $order->update(['total' => $total]);
+
+        return $order;
+    }
+}
