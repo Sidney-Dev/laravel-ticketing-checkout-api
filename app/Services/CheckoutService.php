@@ -22,7 +22,7 @@ class CheckoutService
             $total = 0;
 
             foreach ($orderData['tickets'] as $item) {
-                $ticket = Ticket::findOrFail($item['ticket_id']);
+                $ticket = Ticket::lockForUpdate()->findOrFail($item['ticket_id']);
 
                 // update inventory
                 $ticket->decrement('available_quantity', $item['quantity']);
