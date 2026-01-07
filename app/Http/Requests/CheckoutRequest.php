@@ -46,11 +46,20 @@ class CheckoutRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            $eventId = $this->input('event_id');
+
             foreach ($this->input('tickets', []) as $index => $item) {
                 $ticket = Ticket::find($item['ticket_id']);
 
                 if (!$ticket) {
                     continue;
+                }
+
+                if ($ticket->event_id !== (int) $eventId) {
+                    $validator->errors()->add(
+                        "tickets.$index.ticket_id",
+                        "Ticket does not belong to the selected event."
+                    );
                 }
 
                 if ($ticket->available_quantity < $item['quantity']) {
@@ -61,6 +70,7 @@ class CheckoutRequest extends FormRequest
                 }
             }
         });
+
     }
 
 }
