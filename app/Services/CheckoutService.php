@@ -24,6 +24,14 @@ class CheckoutService
             foreach ($orderData['tickets'] as $item) {
                 $ticket = Ticket::lockForUpdate()->findOrFail($item['ticket_id']);
 
+                if ($ticket->event_id !== (int) $orderData['event_id']) {
+                    throw new \RuntimeException('Ticket does not belong to the event.');
+                }
+
+                if ($ticket->available_quantity < $item['quantity']) {
+                    throw new \RuntimeException('Insufficient ticket inventory.');
+                }
+                
                 // update inventory
                 $ticket->decrement('available_quantity', $item['quantity']);
                 $lineTotal = $ticket->price * $item['quantity'];
